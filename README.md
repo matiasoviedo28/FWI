@@ -17,10 +17,10 @@ En este proyecto se busca crear una `herramienta gratuita` para profesionales co
 * `Eficiencia`: Automatiza tareas repetitivas y permite enfocarse en el análisis de resultados.
 * `Precisión`: Utiliza fórmulas estándar para garantizar la calidad de los índices calculados.
 * `Confiabilidad`: Los datos se guardan de manera incremental. Asegurando el registro historico en el los calculos de cada día
-* `Estadisticas`: Los datos historicos están disponibles para ser consultados
+* `Estadísticas`: Los datos historicos están disponibles para ser consultados
 
 ## 🔥 Indice FWI 
-El `Fire Weather Index` (FWI) es un sistema internacionalmente reconocido para evaluar el riesgo de incendios forestales, basado en condiciones meteorológicas. Este índice combina factores clave como la temperatura, la humedad, el viento y las precipitaciones recientes, junto con una serie de cálculos que simulan el comportamiento del fuego en distintas condiciones.
+El `Fire Weather Index` (FWI) es un sistema internacionalmente reconocido para evaluar el riesgo de incendios forestales, basado en condiciones meteorológicas. Este índice combina factores claves como la temperatura, la humedad, el viento y las precipitaciones recientes, junto con una serie de cálculos que simulan el comportamiento del fuego en distintas condiciones.
 
 El FWI no solo mide el riesgo de que ocurra un incendio, sino también su `intensidad` y `rapidez de propagación`, `disponibilidad de combustible fino y grueso`, proporcionando información esencial para la planificación, prevención y respuesta a emergencias relacionadas con incendios forestales.
 
@@ -33,7 +33,7 @@ Todos los calculos utilizados se basan en las formulas matemáticas que se utili
 
     ---
 
-* `DMC` (Código de Humedad): Indica el contenido de humedad en capas moderadas de y ramas de tamaño medio. Ayuda a estimar cuánto combustible se quemará en incendios más intensos. 
+* `DMC` (Código de Humedad): Indica el contenido de humedad en combustibles medios.
 <img src="images/IF_Merlo_comb_mediano.jpg" alt="Incendio de combustible mediano" width="350">
 
     ---
