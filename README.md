@@ -118,6 +118,7 @@ Se sugiere contrastar los datos con fuentes oficiales y otros modelos meteoroló
 - [Structure of the Canadian Forest Fire Weather Index, by
 C. E. Van Wagner](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=6eb255d878bc0cead1cac0b96304ed8980349042)
 - [Food and Agriculture Organization of the United Nations (FAO)](https://www.fao.org/4/XII/0738-B3.htm)
+- [Manual Ministerio de Ambiente Arg.](https://drive.google.com/file/d/115Ob64dnTYDipzYPPfd-J_sI5cE6y8qt/view?usp=sharing)
 
 ## Proyecto realizado por:
 * `Project Manager, y Data Scientist:` [Matias Oviedo](https://github.com/matiasoviedo28), 👨‍🚒 Bombero Voluntario de Merlo, San Luis, Arg
