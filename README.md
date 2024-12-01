@@ -53,7 +53,7 @@ Todos los calculos utilizados se basan en las formulas matemáticas que se utili
 ---
 
 ## ⚙ Características principales del proyecto 
-* Actualización diaria: Los datos meteorológicos se actualizan automáticamente todos los días a las `15hs Arg`.
+* Actualización diaria: Los datos meteorológicos se actualizan automáticamente todos los días a las `12hs Arg` (-3 UTC).
 * Consulta interactiva: Muestra estadísticas históricas y predicciones basadas en cálculos.
 * Mapa visual: Los resultados se pueden visualizar en un mapa para facilitar la interpretación.
 
