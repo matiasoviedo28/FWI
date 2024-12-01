@@ -68,6 +68,7 @@ Todos los calculos utilizados se basan en las formulas matemáticas que se utili
 
 ### Escala: 
 * En la parte `inferior izquierda` encontramos la escala utilizada para interpretar el fwi, relacionando su valor con una palabra del tipo de riesgo. Y también la `fecha` de la cual se están visualizando los datos.
+Tener en cuenta que se los resultados se pueden interpretar distinto según la región, por ejemplo `en la Patagonia no significa lo mismo 20 de fwi que en Misiones`. Entonces la escala en relación a el riesgo (bajo, moderado, alto, muy alto y extremo) `varía según la provincia`
     ![Escala](/images/pag_escala.png)
 
     ---
@@ -82,12 +83,19 @@ Todos los calculos utilizados se basan en las formulas matemáticas que se utili
 * Se divide al territorio argentino por `cuadrantes de 15km`, tomando el punto central al cuadrado para la medición meteorologica. Cada uno de estos se `colorea automaticamente` en base a su escala FWI. Y al hacerle click nos muestra su información. (Al hacer click en "Más Info" nos redirigirá a un dashboard interactivo de ese punto con datos historicos y modelos predictivos)
     ![Cuadrantes](/images/pag_cuadrante.png)
 
-    ---
+---
+
 ### Dashboard: 
 * Aquí podremos `visualizar e interpretar` distintos graficos sobre la información historica de cada punto.
     ![Dashboard](/images/pag_dashboard.png)
 
-    ---
+---
+
+### Escalabilidad:
+* Los datos tratados abarcan toda la zona del mapa, pero se colorea y publica solo la zona de Argentina, de todos modos se puede tratar los países limitrofes con el mismo metodo internacional.
+    ![Escalabilidad](/images/cobertura_smn.png)
+
+___
 
 ## 📃 Descargo de responsabilidad: 
 
