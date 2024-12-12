@@ -53,7 +53,7 @@ Todos los calculos utilizados se basan en las formulas matemáticas que se utili
 ---
 
 ## ⚙ Características principales del proyecto 
-* Actualización diaria: Los datos meteorológicos se actualizan automáticamente todos los días a las `12hs Arg` (-3 UTC).
+* Actualización diaria: Los datos meteorológicos se actualizan automáticamente todos los días a las `12hs Arg`.
 * Consulta interactiva: Muestra estadísticas históricas y predicciones basadas en cálculos.
 * Mapa visual: Los resultados se pueden visualizar en un mapa para facilitar la interpretación.
 
@@ -70,6 +70,34 @@ Todos los calculos utilizados se basan en las formulas matemáticas que se utili
 * En la parte `inferior izquierda` encontramos la escala utilizada para interpretar el fwi, relacionando su valor con una palabra del tipo de riesgo. Y también la `fecha` de la cual se están visualizando los datos.
 Tener en cuenta que se los resultados se pueden interpretar distinto según la región, por ejemplo `en la Patagonia no significa lo mismo 20 de fwi que en Misiones`. Entonces la escala en relación a el riesgo (bajo, moderado, alto, muy alto y extremo) `varía según la provincia`
     ![Escala](/images/pag_escala.png)
+
+    `Escala relativa de cada provincia:`
+    | Provincia | Bajo | Moderado | Alto | Muy Alto | Extremo | 
+    |---------- | ----- | ------- | --- | ------- | -------- |  
+    |Buenos Aires | 0.00-4.10 | 4.11-12.40 | 12.41-25.50 | 25.51-42.60 | >
+    |Tierra del Fuego | 0.00-0.80 | 0.81-3.70 | 3.71-9.20 | 9.21-17.60 | >
+    |Santa Cruz | 0.00-12.00 | 12.01-24.40 | 24.41-42.30 | 42.31-63.90 | >
+    |Chubut | 0.00-7.90 | 7.91-16.50 | 16.51-34.20 | 34.21-50.20 | >
+    |Rio Negro | 0.00-7.50 | 7.51-19.50 | 19.51-37.20 | 37.21-56.40 | >
+    |Neuquén | 0.00-8.30 | 8.31-20.80 | 20.81-39.40 | 39.41-59.80 | >
+    |La Pampa | 0.00-4.10 | 4.11-12.40 | 12.41-25.50 | 25.51-42.60 | >
+    |Mendoza | 0.00-8.30 | 8.31-20.80 | 20.81-39.40 | 39.41-59.80 | >
+    |San Luis | 0.00-4.10 | 4.11-12.40 | 12.41-25.50 | 25.51-42.60 | >
+    |Córdoba | 0.00-6.00 | 6.01-15.00 | 15.01-28.00 | 28.01-46.00 | >
+    |Santa Fe | 0.00-1.90 | 1.91-6.70 | 6.71-13.40 | 13.41-22.40 | >
+    |Entre Ríos | 0.00-1.90 | 1.91-6.70 | 6.71-13.40 | 13.41-22.40 | >
+    |San Juan | 0.00-23.80 | 23.81-36.00 | 36.01-53.50 | 53.51-77.50 | >
+    |La Rioja | 0.00-7.40 | 7.41-15.90 | 15.91-26.90 | 26.91-37.10 | >
+    |Catamarca | 0.00-13.40 | 13.41-26.10 | 26.11-44.30 | 44.31-75.30 | >
+    |Santiago Del Estero | 0.00-6.20 | 6.21-15.40 | 15.41-28.50 | 28.51-42.40 | >
+    |Corrientes | 0.00-2.10 | 2.11-8.60 | 8.61-18.00 | 18.01-30.10 | >
+    |Misiones | 0.00-2.10 | 2.11-8.60 | 8.61-18.00 | 18.01-30.10 | >
+    |Chaco | 0.00-1.90 | 1.91-7.80 | 7.81-16.10 | 16.11-26.10 | >
+    |Tucumán | 0.00-1.40 | 1.41-7.10 | 7.11-15.70 | 15.71-27.80 | >
+    |Salta | 0.00-1.90 | 1.91-7.30 | 7.31-17.60 | 17.61-28.40 | >
+    |Jujuy | 0.00-2.30 | 2.31-9.60 | 9.61-22.40 | 22.41-35.90 | >
+    |Formosa | 0.00-2.10 | 2.11-8.60 | 8.61-18.00 | 18.01-30.10 | >
+
 
     ---
 
