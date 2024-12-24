@@ -58,7 +58,7 @@ Todos los calculos utilizados se basan en las formulas matemáticas que se utili
 * Mapa visual: Los resultados se pueden visualizar en un mapa para facilitar la interpretación.
 
 ## Página Web
-[Ir a la página](https://www.fwi.com.ar)
+[Ir a la página](https://fwi.com.ar)
 
 ### Inicio:
 * Al abrir la pagina, te encontrarás con un `mapa interactivo` y un menú de barras para más información en la parte superior.
