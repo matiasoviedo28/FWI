@@ -159,3 +159,10 @@ C. E. Van Wagner](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi
 ## Proyecto realizado por:
 * `Project Manager, y Data Scientist:` [Matias Oviedo](https://github.com/matiasoviedo28), 👨‍🚒 Bombero Voluntario de Merlo, San Luis, Arg
 * `Asesor:` [Alexis Lezcano](https://www.instagram.com/alexis.lezcano.794?igsh=Z3RrcWdnaTYxZHBo), 👨‍🚒 Bombero Voluntario de Merlo, San Luis, Arg
+
+___
+
+## 💖 Apoya este proeycto:
+Gracias a personas como vos, fwi.com.ar sigue siendo gratuito para todos. Si te gusta lo que hacemos, podés ayudarnos a seguir creciendo:
+
+[![Invitame un café en cafecito](https://cdn.cafecito.app/imgs/buttons/button_1.svg)](https://cafecito.app/fwi)
