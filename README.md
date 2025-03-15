@@ -157,7 +157,7 @@ C. E. Van Wagner](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi
 - [Manual Ministerio de Ambiente Arg.](https://drive.google.com/file/d/115Ob64dnTYDipzYPPfd-J_sI5cE6y8qt/view?usp=sharing)
 
 ## Proyecto realizado por:
-* `Project Manager, Data Scientist y Full-Stack Developer:` [Matias Oviedo](https://github.com/matiasoviedo28), 👨‍🚒 Bombero Voluntario de Merlo, San Luis, Arg
+* `Data Scientist y Full-Stack Developer:` [Matias Oviedo](https://github.com/matiasoviedo28), 👨‍🚒 Bombero Voluntario de Merlo, San Luis, Arg
 * `Asesor:` [Alexis Lezcano](https://www.instagram.com/alexis.lezcano.794?igsh=Z3RrcWdnaTYxZHBo), 👨‍🚒 Bombero Voluntario de Merlo, San Luis, Arg
 
 ___
