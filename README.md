@@ -146,7 +146,11 @@ Se sugiere contrastar los datos con fuentes oficiales y otros modelos meteoroló
 ![Pandas](https://img.shields.io/badge/-Pandas-333333?style=flat&logo=pandas)
 ![GeoPandas](https://img.shields.io/static/v1?style=for-the-badge&message=GeoPandas&color=139C5A&style=flatlogo=GeoPandas&logoColor=FFFFFF&label=)
 
-### Repositorio del código y base de datos: ![Click Aquí](https://github.com/matiasoviedo28/FWI_CODE)
+---
+
+## FWI_CODE - Repositorio en desarrollo:
+Este proyecto continua en desarrollo y su codigo fuente se aloja en un repositorio separado. Podes consultarlo aqui:
+[FWI_CODE](https://github.com/matiasoviedo28/FWI_CODE)
 
 ---
 
