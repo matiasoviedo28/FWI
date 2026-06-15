@@ -1,0 +1,58 @@
+services:
+  # Plano de control: cobertura de datos + cola de jobs
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fwi
+      POSTGRES_PASSWORD: fwi
+      POSTGRES_DB: fwi
+    volumes:
+      - fwi-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fwi"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # API de índices + datos del mapa + gestión
+  api:
+    build: .
+    command: uvicorn api.main:app --host 0.0.0.0 --port 9000
+    environment:
+      DATABASE_URL: postgresql://fwi:fwi@db:5432/fwi
+    volumes:
+      - fwi-data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Frontend estático (landing + mapa) con reverse proxy a la API
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # Worker: consume la cola de jobs (backfill) y mantiene el día actual
+  pipeline:
+    build: .
+    command: python -m pipeline.worker
+    environment:
+      DATABASE_URL: postgresql://fwi:fwi@db:5432/fwi
+    volumes:
+      - fwi-data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  fwi-data:
+  fwi-db:

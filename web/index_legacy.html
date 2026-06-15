@@ -1,0 +1,463 @@
+
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FWI — Fire Weather Index (Proyecto Abierto)</title>
+  <meta name="description" content="Información técnica del Fire Weather Index (FWI) y calculadora online conectada a la API.">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <meta name="color-scheme" content="dark light">
+  <style>
+    :root{
+      --bg:#0d1b2a; --bg-soft:#0f2438; --surface:#13293d; --card:#173a5e;
+      --primary:#2a9d8f; --secondary:#457b9d; --accent:#e76f51;
+      --text:#e9f1f7; --muted:#b7c9d9; --ok:#83d692; --warn:#ffd166; --danger:#ef476f;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:18px; --radius-sm:12px; --gap:22px; --maxw:1200px;
+      /* Calc */
+      --surface-2:#151c2d; --border:rgba(255,255,255,.10);
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f7fbff; --bg-soft:#eef4fb; --surface:#ffffff; --card:#ffffff;
+        --secondary:#2f5f86; --accent:#d44d34; --text:#0e1824; --muted:#5b7288;
+        --shadow:0 12px 28px rgba(20,40,80,.12); --border:rgba(0,0,0,.08);
+      }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 1200px at 85% -10%, rgba(42,157,143,.18), transparent),
+                  radial-gradient(900px 900px at -10% 10%, rgba(69,123,157,.16), transparent),
+                  var(--bg);
+      line-height:1.6; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+    a{color:inherit;text-decoration:none}
+    .container{max-width:var(--maxw); margin:0 auto; padding:0 20px}
+
+    /* Nav */
+    nav{position:sticky; top:0; z-index:50; background:rgba(15,30,50,.75); backdrop-filter:blur(10px); border-bottom:1px solid rgba(255,255,255,.06)}
+    @media (prefers-color-scheme: light){ nav{background:rgba(255,255,255,.8)} }
+    .nav-inner{display:flex; align-items:center; justify-content:space-between; padding:14px 0}
+    .brand{display:flex; gap:12px; align-items:center; font-weight:800; letter-spacing:.2px}
+    .logo{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:white;background:conic-gradient(from 210deg,var(--accent),var(--secondary),var(--primary)); box-shadow:var(--shadow)}
+    .nav-links{display:flex; gap:18px; align-items:center; font-weight:600}
+    .gh-btn{display:inline-flex; gap:10px; align-items:center; background:var(--surface); border:1px solid rgba(255,255,255,.08); padding:10px 14px; border-radius:12px; font-weight:700; transition:.2s transform}
+    .gh-btn:hover{transform:translateY(-1px)}
+    .menu-btn{display:none}
+    @media (max-width: 720px){ .nav-links{display:none} .menu-btn{display:inline-flex; gap:8px; align-items:center; background:transparent; border:1px solid rgba(255,255,255,.18); padding:8px 12px; border-radius:10px} .drawer{position:fixed; top:56px; right:14px; background:var(--surface); border:1px solid rgba(255,255,255,.12); border-radius:12px; box-shadow:var(--shadow); padding:12px; width:min(86vw, 320px); display:none} .drawer a{display:block; padding:10px 12px; border-radius:9px} .drawer a:hover{background:rgba(255,255,255,.06)} .drawer.open{display:block} }
+
+    /* Hero */
+    .hero{padding:70px 0 40px; display:grid; gap:26px}
+    .hero h1{font-size:clamp(28px, 4.2vw, 48px); line-height:1.15; margin:0 0 10px}
+    .pill{display:inline-block; font-size:12px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; background:rgba(42,157,143,.15); border:1px solid rgba(42,157,143,.35); color:var(--text); padding:6px 10px; border-radius:999px}
+    .lead{font-size:clamp(16px,2.2vw,19px); color:var(--muted); max-width:900px; margin:0}
+
+    /* Cards y grids */
+    .hero-cards{margin-top:26px; display:grid; gap:var(--gap); grid-template-columns:repeat(12,1fr)}
+    .card{grid-column:span 12; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,0)); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow)}
+    section{padding:50px 0}
+    h2{font-size:clamp(22px,3vw,32px); margin:0 0 14px}
+    .muted{color:var(--muted)}
+    .grid-2{display:grid; gap:var(--gap); grid-template-columns:repeat(12,1fr)}
+    .grid-2 > *:nth-child(1){grid-column:span 12}
+    .grid-2 > *:nth-child(2){grid-column:span 12}
+    @media (min-width:900px){ .grid-2 > *:nth-child(1){grid-column:span 7} .grid-2 > *:nth-child(2){grid-column:span 5} .card.span-6{grid-column:span 6} }
+
+    /* KPI */
+    .kpis{display:grid; gap:var(--gap); grid-template-columns:repeat(6,minmax(0,1fr))}
+    .kpi{grid-column:span 6; background:var(--card); border-radius:var(--radius); padding:18px; border:1px solid rgba(255,255,255,.06)}
+    @media (min-width:700px){ .kpi{grid-column:span 2} }
+    .badge{font-weight:800; font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid; display:inline-block; margin-right:6px}
+    .b-ok{color:var(--ok); border-color:rgba(131,214,146,.5); background:rgba(131,214,146,.12)}
+    .b-warn{color:var(--warn); border-color:rgba(255,209,102,.5); background:rgba(255,209,102,.12)}
+    .b-danger{color:var(--danger); border-color:rgba(239,71,111,.5); background:rgba(239,71,111,.12)}
+
+    /* Acordeón */
+    .accordion{display:grid; gap:12px}
+    .acc-item{background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:12px; overflow:hidden}
+    .acc-head{padding:16px 18px; cursor:pointer; font-weight:700; display:flex; justify-content:space-between; align-items:center}
+    .acc-body{padding:0 18px; max-height:0; overflow:hidden; transition:max-height .3s ease; border-top:1px solid rgba(255,255,255,.06); background:linear-gradient(180deg, rgba(255,255,255,.02), transparent)}
+    .acc-body-inner{padding:16px 0 18px}
+
+    /* Calculadora */
+    .label{display:block;font-weight:700;margin-bottom:6px}
+    input,select{width:100%;padding:11px 12px;border-radius:12px;background:var(--surface);color:var(--text);border:1px solid var(--border);outline:none}
+    input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(42,157,143,.15)}
+    .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    .pill-alt{background:rgba(42,157,143,.15);border:1px solid rgba(42,157,143,.35);border-radius:999px;padding:6px 10px;font-size:12px;color:var(--text)}
+    .switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+    .switch input{appearance:none;width:46px;height:26px;border-radius:999px;background:#2a3349;position:relative;transition:all .2s;border:1px solid var(--border)}
+    .switch input:before{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:all .2s}
+    .switch input:checked{background:#2f825a}
+    .switch input:checked:before{left:23px}
+    button.primary{all:unset;cursor:pointer;background:linear-gradient(135deg,#4aa3ff,#5cc8ff);color:#082038;padding:11px 16px;border-radius:12px;font-weight:700;box-shadow:var(--shadow)}
+    button.secondary{all:unset;cursor:pointer;background:var(--surface);border:1px solid var(--border);padding:10px 14px;border-radius:12px}
+    pre{margin:0;background:#0c1220;border:1px solid var(--border);border-radius:12px;padding:12px;overflow:auto}
+    canvas{width:100%; height:280px}
+    .foot{padding:26px 0 50px; color:var(--muted); font-size:14px; text-align:center}
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="container nav-inner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">🔥</div>
+        <div>FWI <small style="opacity:.7;font-weight:600">Fire Weather Index</small></div>
+      </div>
+      <div class="nav-links">
+        <a href="#que-es">Qué es</a>
+        <a href="#componentes">Componentes</a>
+        <a href="#metodologia">Metodología</a>
+        <a href="#probar">Probar</a>
+        <a class="gh-btn" href="web/mapa.html" target="_blank" rel="noopener">Mapa FWI</a>
+        <a class="gh-btn" href="http://fwi.com.ar:9000/docs" target="_blank" rel="noopener">Swagger</a>
+      </div>
+      <button class="menu-btn" id="menuBtn" aria-label="Menú">☰ Menú</button>
+    </div>
+    <div class="container">
+      <div class="drawer" id="drawer">
+        <a href="#que-es">Qué es</a>
+        <a href="#componentes">Componentes</a>
+        <a href="#metodologia">Metodología</a>
+        <a href="#probar">Probar</a>
+        <a href="web/mapa.html" target="_blank" rel="noopener">Mapa FWI</a>
+        <a href="http://fwi.com.ar:9000/docs" target="_blank" rel="noopener">Swagger</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="container hero">
+    <span class="pill">Proyecto abierto</span>
+    <h1>Índice Meteorológico de Incendios: <span style="color:var(--primary)">FWI</span> con transparencia y precisión</h1>
+    <p class="lead">
+      El <strong>Fire Weather Index (FWI)</strong> estima el peligro meteorológico de incendios a partir de temperatura, humedad, viento y precipitación.
+      Aquí encontrarás <strong>explicación técnica</strong> y una <strong>calculadora online</strong> conectada a la API.
+    </p>
+    <a class="gh-btn" href="web/mapa.html" target="_blank" rel="noopener" style="width:max-content">Mapa FWI</a>
+    <div class="hero-cards">
+      <div class="card span-6"><h3>Objetivo</h3><p>Referencia clara y de calidad sobre el FWI, con foco en <strong>metodología abierta</strong> e integración sencilla.</p></div>
+      <div class="card span-6"><h3>Transparencia</h3><p>Implementación auditable y alineada con las definiciones del sistema canadiense.</p></div>
+    </div>
+  </header>
+
+  <!-- EXPLICACIÓN -->
+  <main>
+    <section id="que-es" class="container grid-2">
+      <div>
+        <h2>¿Qué es el FWI?</h2>
+        <p>
+          El <strong>FWI</strong> es la salida del sistema canadiense CFFDRS. Usa tres códigos de humedad (FFMC, DMC, DC) y dos índices (ISI, BUI)
+          para producir un valor adimensional que <strong>sintetiza propagación e intensidad potencial</strong> del fuego bajo las condiciones del día.
+        </p>
+        <p>
+          Este valor guía medidas de <strong>prevención de incendios forestales</strong>. Sirve para planificar patrullajes, informar a la población y organizar recursos en parques, bosques y zonas rurales de Argentina.
+        </p>
+        <div class="kpis">
+          <div class="kpi"><span class="badge b-ok">Entrada</span><b>Temperatura, HR, Viento, PP</b><small class="muted">Variables meteorológicas de base</small></div>
+          <div class="kpi"><span class="badge b-warn">Códigos</span><b>FFMC • DMC • DC</b><small class="muted">Humedad en estratos del combustible</small></div>
+          <div class="kpi"><span class="badge b-warn">Índices</span><b>ISI • BUI</b><small class="muted">Propagación y disponibilidad</small></div>
+          <div class="kpi"><span class="badge b-danger">Salida</span><b>FWI</b><small class="muted">Intensidad potencial</small></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <h3>Visualización ilustrativa</h3>
+          <p class="muted">Serie simulada (no operativa) para mostrar el formato de salida.</p>
+          <canvas id="chart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section id="componentes" class="container">
+      <h2>Componentes del sistema</h2>
+      <div class="accordion" id="accordion">
+        <div class="acc-item"><div class="acc-head">FFMC — Fine Fuel Moisture Code</div><div class="acc-body"><div class="acc-body-inner"><p>Mide la humedad del combustible fino: afecta ignición y propagación inicial. Sensible a HR, T°, viento y lloviznas.</p></div></div></div>
+        <div class="acc-item"><div class="acc-head">DMC — Duff Moisture Code</div><div class="acc-body"><div class="acc-body-inner"><p>Humedad del mantillo orgánico: integra condiciones de varios días, modula persistencia.</p></div></div></div>
+        <div class="acc-item"><div class="acc-head">DC — Drought Code</div><div class="acc-body"><div class="acc-body-inner"><p>Sequía profunda: tendencia de largo plazo y energía potencial disponible.</p></div></div></div>
+        <div class="acc-item"><div class="acc-head">ISI / BUI / FWI</div><div class="acc-body"><div class="acc-body-inner"><pre><code>ISI = φ(FFMC, Viento)
+BUI = ψ(DMC, DC)
+FWI = ω(ISI, BUI)</code></pre></div></div></div>
+      </div>
+    </section>
+
+    <!-- CALCULADORA -->
+    <section id="probar" class="container">
+      <h2>Calculadora online</h2>
+      <div class="card">
+        <p class="muted">Elegí el método, alterná <b>simple</b>/<b>complejo</b> y completá los campos. Se envía un <code>POST</code> a <code>/api/&lt;método&gt;</code>.</p>
+        <div class="grid-2" style="margin-top:10px">
+          <!-- Form -->
+          <div>
+            <div class="row" style="gap:14px; flex-wrap:wrap">
+              <div style="min-width:220px;flex:1 1 220px">
+                <label class="label" for="metodo">Método</label>
+                <select id="metodo">
+                  <option value="FFMC">FFMC</option>
+                  <option value="DMC">DMC</option>
+                  <option value="DC">DC</option>
+                  <option value="ISI">ISI</option>
+                  <option value="BUI">BUI</option>
+                  <option value="FWI">FWI</option>
+                </select>
+              </div>
+              <div class="row" style="gap:10px;align-items:center">
+                <span class="pill-alt">Modo</span>
+                <label class="switch" title="simple/complejo">
+                  <input id="modoToggle" type="checkbox">
+                </label>
+                <span id="modoLabel" class="muted">simple</span>
+              </div>
+            </div>
+
+            <div id="campos" style="margin-top:16px; display:grid; gap:12px"></div>
+
+            <div class="row" style="gap:10px;margin-top:14px">
+              <button id="btnCalcular" class="primary">Calcular</button>
+              <button id="btnLimpiar" class="secondary">Limpiar</button>
+              <a class="gh-btn" href="http://fwi.com.ar:9000/docs" target="_blank" rel="noopener">Swagger</a>
+            </div>
+          </div>
+
+          <!-- Resultado -->
+          <div>
+            <h3>Resultado</h3>
+            <pre id="salida" aria-live="polite" style="min-height:120px">Aún sin ejecutar.</pre>
+            <h3 style="margin-top:14px">Payload</h3>
+            <pre id="payloadPreview" style="min-height:120px"></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- API -->
+    <section id="api" class="container">
+      <h2>API para desarrolladores</h2>
+      <div class="card">
+        <ul>
+          <li><code>POST /api/FFMC</code> — Fine Fuel Moisture Code</li>
+          <li><code>POST /api/DMC</code> — Duff Moisture Code</li>
+          <li><code>POST /api/DC</code> — Drought Code</li>
+          <li><code>POST /api/BUI</code> — Buildup Index</li>
+          <li><code>POST /api/ISI</code> — Initial Spread Index</li>
+          <li><code>POST /api/FWI</code> — Fire Weather Index</li>
+        </ul>
+        <p class="muted">Documentación interactiva: <a href="http://fwi.com.ar:9000/docs" target="_blank" rel="noopener">/docs</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="container">
+      <div>FWI — Fire Weather Index • Proyecto abierto • <span id="year"></span></div>
+      <div><a href="http://fwi.com.ar:9000/docs" target="_blank" rel="noopener">Swagger</a></div>
+    </div>
+  </footer>
+
+  <script>
+    // ======= Navegación móvil + acordeones =======
+    const menuBtn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('drawer');
+    menuBtn?.addEventListener('click', () => drawer.classList.toggle('open'));
+    document.querySelectorAll('.acc-item').forEach(item => {
+      const head = item.querySelector('.acc-head');
+      const body = item.querySelector('.acc-body');
+      head.addEventListener('click', () => {
+        const open = body.style.maxHeight && body.style.maxHeight !== '0px';
+        body.style.maxHeight = open ? '0px' : (body.scrollHeight + 8) + 'px';
+      });
+    });
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', e=>{
+        const id = a.getAttribute('href'); const el = document.querySelector(id);
+        if(el){ e.preventDefault(); el.scrollIntoView({behavior:'smooth', block:'start'}) }
+        drawer?.classList.remove('open');
+      })
+    });
+
+    // ======= Pequeño gráfico ilustrativo (no requiere libs) =======
+    (function(){
+      const c = document.getElementById('chart'); if(!c) return;
+      const ctx = c.getContext('2d');
+      const DPR = window.devicePixelRatio||1;
+      const W = c.width = c.clientWidth * DPR;
+      const H = c.height = c.clientHeight * DPR;
+      const pad = 40*DPR, N=40;
+      let y=[], v=12, trend=.15; for(let i=0;i<N;i++){ v=Math.max(0, v + (Math.random()*2-1)*2 + trend); y.push(v); }
+      const ymin=0, ymax=Math.max(30, Math.ceil(Math.max(...y)/5)*5);
+      const sx = i => pad + i*(W-2*pad)/(N-1);
+      const sy = v => H-pad - (v-ymin)*(H-2*pad)/(ymax-ymin);
+
+      // Área
+      const grd = ctx.createLinearGradient(0,0,0,H); grd.addColorStop(0,'rgba(42,157,143,.10)'); grd.addColorStop(1,'rgba(42,157,143,0)');
+      ctx.fillStyle=grd; ctx.beginPath(); ctx.moveTo(sx(0), sy(y[0])); for(let i=1;i<N;i++) ctx.lineTo(sx(i), sy(y[i]));
+      ctx.lineTo(sx(N-1), H-pad); ctx.lineTo(sx(0), H-pad); ctx.closePath(); ctx.fill();
+
+      // Línea
+      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#2a9d8f';
+      ctx.lineWidth = 2.4*DPR; ctx.beginPath(); ctx.moveTo(sx(0), sy(y[0])); for(let i=1;i<N;i++) ctx.lineTo(sx(i), sy(y[i])); ctx.stroke();
+
+      // Ejes
+      ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=1*DPR; ctx.beginPath();
+      ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.stroke();
+
+      // Ticks Y
+      ctx.fillStyle='rgba(255,255,255,.75)'; ctx.font = 12*DPR+'px Inter';
+      const steps=5; for(let i=0;i<=steps;i++){ const v=ymin+i*(ymax-ymin)/steps, yy=sy(v);
+        ctx.beginPath(); ctx.moveTo(pad,yy); ctx.lineTo(W-pad,yy); ctx.stroke();
+        ctx.fillText(String(Math.round(v)), 8, yy+4);
+      }
+    })();
+
+    // ======= Calculadora =======
+    const API_BASE = "/api"; // via Nginx reverse proxy (HTTPS)
+
+    // Definición de campos
+    const camposDef = {
+      temperatura: { label:"Temperatura (°C)", name:"temperatura_celsius", type:"number", step:"0.1", placeholder:"25.0" },
+      humedad:     { label:"Humedad relativa (%)", name:"humedad_relativa", type:"number", step:"0.1", placeholder:"40.0" },
+      viento:      { label:"Velocidad del viento (km/h)", name:"velocidad_viento_kmh", type:"number", step:"0.1", placeholder:"15.0" },
+      lluvia:      { label:"Precipitación (mm)", name:"precipitacion_mm", type:"number", step:"0.1", placeholder:"0.0" },
+      ffmc:        { label:"FFMC", name:"ffmc", type:"number", step:"0.1", placeholder:"85.0" },
+      dmc:         { label:"DMC",  name:"dmc",  type:"number", step:"0.1", placeholder:"12.0" },
+      dc:          { label:"DC",   name:"dc",   type:"number", step:"0.1", placeholder:"250.0" },
+      ffmc_prev:   { label:"FFMC (día anterior)", name:"ffmc_dia_anterior", type:"number", step:"0.1", placeholder:"88.1" },
+      dmc_prev:    { label:"DMC (día anterior)",  name:"dmc_dia_anterior",  type:"number", step:"0.1", placeholder:"12.7" },
+      dc_prev:     { label:"DC (día anterior)",   name:"dc_dia_anterior",   type:"number", step:"0.1", placeholder:"230.0" },
+    };
+
+    // Campos por método y modo
+    const uiPorMetodo = {
+      FFMC: { simple:["temperatura","humedad","viento","lluvia"], complejo:["temperatura","humedad","viento","lluvia","ffmc_prev"] },
+      DMC:  { simple:["temperatura","humedad","lluvia"],          complejo:["temperatura","humedad","lluvia","dmc_prev"] },
+      DC:   { simple:["temperatura","humedad","lluvia"],          complejo:["temperatura","humedad","lluvia","dc_prev"] },
+      ISI:  { simple:["ffmc","viento"],                             complejo:["ffmc","viento"] },
+      BUI:  { simple:["dmc","dc"],                                complejo:["dmc","dc"] },
+      FWI:  { simple:["ffmc","dmc","dc","viento"],                complejo:["ffmc","dmc","dc","viento"] }
+    };
+
+    // Elementos
+    const metodoSel = document.getElementById("metodo");
+    const modoToggle = document.getElementById("modoToggle");
+    const modoLabel  = document.getElementById("modoLabel");
+    const camposDiv  = document.getElementById("campos");
+    const salida     = document.getElementById("salida");
+    const payloadPreview = document.getElementById("payloadPreview");
+    const btnCalcular = document.getElementById("btnCalcular");
+    const btnLimpiar  = document.getElementById("btnLimpiar");
+
+    function renderCampos(){
+      const metodo = metodoSel.value;
+      const modo = modoToggle.checked ? "complejo" : "simple";
+      modoLabel.textContent = modo;
+      const lista = uiPorMetodo[metodo][modo];
+      camposDiv.innerHTML = "";
+      lista.forEach(key=>{
+        const def = camposDef[key];
+        const wrap = document.createElement("div");
+        wrap.innerHTML = `<label class="label">${def.label}</label>
+          <input type="${def.type}" inputmode="decimal" step="${def.step}" name="${def.name}" placeholder="${def.placeholder}">`;
+        camposDiv.appendChild(wrap);
+      });
+      payloadPreview.textContent = construirPayload(true);
+    }
+
+    function leerCampos(){
+      const inputs = camposDiv.querySelectorAll("input");
+      const data = {};
+      inputs.forEach(inp=>{
+        const v = inp.value.trim();
+        data[inp.name] = v === "" ? null : Number(v);
+      });
+      return data;
+    }
+
+    function construirPayload(preview=false){
+      const metodo = metodoSel.value;
+      const modo = modoToggle.checked ? "complejo" : "simple";
+      const data = leerCampos();
+      let payload = { modo, datos:{} };
+
+      if(metodo==="FFMC"){
+        payload.datos = {
+          temperatura_celsius: data.temperatura_celsius ?? 25,
+          humedad_relativa:    data.humedad_relativa ?? 40,
+          velocidad_viento_kmh:data.velocidad_viento_kmh ?? 10,
+          precipitacion_mm:    data.precipitacion_mm ?? 0,
+        };
+        if(modo==="complejo") payload.datos_dia_anterior = { ffmc_dia_anterior: data.ffmc_dia_anterior ?? 85 };
+      } else if(metodo==="DMC"){
+        payload.datos = {
+          temperatura_celsius: data.temperatura_celsius ?? 25,
+          humedad_relativa:    data.humedad_relativa ?? 40,
+          precipitacion_mm:    data.precipitacion_mm ?? 0,
+        };
+        if(modo==="complejo") payload.datos_dia_anterior = { dmc_dia_anterior: data.dmc_dia_anterior ?? 6 };
+      } else if(metodo==="DC"){
+        payload.datos = {
+          temperatura_celsius: data.temperatura_celsius ?? 25,
+          humedad_relativa:    data.humedad_relativa ?? 40,
+          precipitacion_mm:    data.precipitacion_mm ?? 0,
+        };
+        if(modo==="complejo") payload.datos_dia_anterior = { dc_dia_anterior: data.dc_dia_anterior ?? 15 };
+      } else if(metodo==="ISI"){
+        payload.datos = {
+          ffmc: data.ffmc ?? 85,
+          velocidad_viento_kmh: data.velocidad_viento_kmh ?? 10,
+        };
+      } else if(metodo==="BUI"){
+        payload.datos = { dmc: data.dmc ?? 12, dc: data.dc ?? 250 };
+      } else if(metodo==="FWI"){
+        payload.datos = {
+          ffmc: data.ffmc ?? 85, dmc: data.dmc ?? 12, dc: data.dc ?? 250,
+          velocidad_viento_kmh: data.velocidad_viento_kmh ?? 10,
+        };
+      }
+      return preview ? JSON.stringify(payload, null, 2) : payload;
+    }
+
+    async function calcular(){
+      const metodo = metodoSel.value;
+      const payload = construirPayload(false);
+      payloadPreview.textContent = JSON.stringify(payload, null, 2);
+      salida.textContent = "Calculando...";
+      try{
+        const resp = await fetch(`${API_BASE}/${metodo}`, {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify(payload)
+        });
+        const text = await resp.text();
+        let body; try{ body = JSON.parse(text) }catch{ body = text }
+        salida.textContent = JSON.stringify({ status:resp.status, ok:resp.ok, body }, null, 2);
+      }catch(err){
+        salida.textContent = JSON.stringify({ error:"API no disponible", detalle: err?.message || String(err) }, null, 2);
+      }
+    }
+
+    function limpiar(){
+      camposDiv.querySelectorAll("input").forEach(i=> i.value="");
+      salida.textContent = "Aún sin ejecutar.";
+      payloadPreview.textContent = construirPayload(true);
+    }
+
+    // Eventos
+    document.getElementById("metodo").addEventListener("change", renderCampos);
+    document.getElementById("modoToggle").addEventListener("change", renderCampos);
+    document.getElementById("btnCalcular").addEventListener("click", calcular);
+    document.getElementById("btnLimpiar").addEventListener("click", limpiar);
+
+    // Inicial
+    renderCampos();
+  </script>
+</body>
+</html>

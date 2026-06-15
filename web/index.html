@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FWI Argentina — Índice meteorológico de peligro de incendios</title>
+  <style>
+    :root { --fire:#e76f51; --ink:#13293d; }
+    body { margin:0; font-family:system-ui,sans-serif; color:var(--ink); line-height:1.6; }
+    header { padding:64px 24px; background:linear-gradient(135deg,#13293d,#2a9d8f); color:#fff; text-align:center; }
+    header h1 { margin:0 0 8px; font-size:clamp(28px,5vw,44px); }
+    .wrap { max-width:900px; margin:0 auto; padding:0 24px; }
+    main { padding:40px 0; }
+    .btn { display:inline-block; margin:8px 8px 0 0; padding:12px 20px; border-radius:10px;
+           background:var(--fire); color:#fff; text-decoration:none; font-weight:600; }
+    .btn.alt { background:#13293d; }
+    .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); margin-top:24px; }
+    .card { border:1px solid #ddd; border-radius:12px; padding:16px; }
+    code { background:#f3f3f3; padding:2px 5px; border-radius:4px; }
+    footer { padding:24px; text-align:center; color:#667; font-size:14px; }
+
+    /* crédito centrado abajo, difuso */
+    .credit{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:1200;
+      font-size:12px;color:#000;text-decoration:none;opacity:.4;filter:blur(.3px);
+      background:rgba(255,255,255,.45);backdrop-filter:blur(2px);padding:3px 12px;border-radius:12px;
+      transition:.25s}
+    .credit:hover{opacity:.9;filter:none}
+
+    /* botón GitHub flotante (abajo a la derecha) */
+    .gh-fab{position:fixed;right:18px;bottom:18px;z-index:1200}
+    .gh-fab a{display:block;color:var(--ink)}
+    .gh-fab svg{width:34px;height:34px;transition:.2s}
+    .gh-fab a:hover svg{transform:scale(1.25);color:var(--fire)}
+    .gh-fab .tip{position:absolute;bottom:48px;left:50%;transform:translateX(-50%) scale(0);
+      transform-origin:bottom;background:#fff;border:1px solid #ddd;border-radius:8px;
+      padding:5px 11px;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15);
+      transition:.25s ease-in-out;white-space:nowrap}
+    .gh-fab a:hover .tip{transform:translateX(-50%) scale(1)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>🔥 FWI Argentina</h1>
+      <p>Índice meteorológico de peligro de incendios forestales, calculado a diario sobre todo el país.</p>
+      <p style="opacity:.75;font-size:14px;margin:0">v3.0.1</p>
+      <a class="btn" href="/map/">Ver el mapa</a>
+      <a class="btn alt" href="/calculadora.html">Calculadora</a>
+    </div>
+  </header>
+  <main class="wrap">
+    <p style="font-size:18px">El <strong>Fire Weather Index (FWI)</strong> es un valor adimensional que
+       estima el <strong>peligro meteorológico</strong> de incendio combinando temperatura, humedad
+       relativa, viento y lluvia de las últimas 24&nbsp;h. No predice <em>dónde</em> se va a iniciar un
+       fuego: estima qué tan favorables están las condiciones para que, una vez iniciado, se propague
+       con intensidad. Se calcula con el sistema canadiense <strong>CFFWIS</strong> sobre el modelo
+       <strong>WRF-DET</strong> del
+       <a href="https://www.smn.gob.ar/">Servicio Meteorológico Nacional</a>, en una grilla de
+       ~4&nbsp;km en todo el país y con pronóstico a <strong>+72&nbsp;h</strong>.</p>
+
+    <h2 style="margin-top:40px">Cómo funciona</h2>
+    <p>Elegís una fecha (o encolás la descarga de un rango nuevo) en el mapa, y el sistema:</p>
+    <ol>
+      <li><strong>Descarga</strong> el pronóstico del SMN (modelo WRF-DET, run de las 00&nbsp;Z) desde
+          su bucket público.</li>
+      <li><strong>Extrae</strong> temperatura, humedad, viento y lluvia 24&nbsp;h para cada celda de la
+          grilla.</li>
+      <li><strong>Calcula</strong> los seis índices del CFFWIS, encadenados día a día (DC y DMC son
+          acumulativos).</li>
+      <li><strong>Pinta</strong> el mapa con bandas vectoriales de riesgo y datos por celda al hacer
+          click.</li>
+    </ol>
+
+    <h2 style="margin-top:40px">Los seis componentes</h2>
+    <p>Tres códigos de humedad del combustible, dos índices intermedios y el índice final de peligro:</p>
+    <div class="grid">
+      <div class="card"><h3>FFMC</h3><p>Humedad de la hojarasca fina. Facilidad de ignición (horas).</p></div>
+      <div class="card"><h3>DMC</h3><p>Humedad de la capa orgánica media (días a semanas).</p></div>
+      <div class="card"><h3>DC</h3><p>Humedad de la capa profunda. Sequía estacional (semanas a meses).</p></div>
+      <div class="card"><h3>ISI</h3><p>Índice de propagación inicial: FFMC + viento.</p></div>
+      <div class="card"><h3>BUI</h3><p>Combustible disponible: DMC + DC.</p></div>
+      <div class="card" style="border-color:var(--fire)"><h3>FWI</h3><p>Índice final de peligro: ISI + BUI.</p></div>
+    </div>
+
+    <h2 style="margin-top:40px">Cobertura de datos</h2>
+    <p>El FWI se calcula <strong>solo donde el modelo WRF-DET del SMN tiene datos</strong>: el dominio
+       marcado en rojo, que abarca Argentina y parte del cono sur. Fuera de ese límite no hay
+       pronóstico disponible. Las fechas accesibles dependen, además, de qué días se hayan descargado
+       desde el mapa.</p>
+    <div style="text-align:center">
+      <img src="images/cobertura_smn.png" alt="Dominio de cobertura del modelo WRF-DET del SMN"
+           style="max-width:380px;width:100%;border-radius:12px;border:1px solid #ddd">
+    </div>
+
+    <h2 style="margin-top:40px">Explorar</h2>
+    <div class="grid">
+      <div class="card"><h3>🗺️ Mapa de peligro</h3><p>Celdas de ~4&nbsp;km coloreadas por nivel de
+        riesgo, con histórico por fecha y pronóstico a +72&nbsp;h.
+        <br><a href="/map/">Abrir el mapa →</a></p></div>
+      <div class="card" style="border-color:var(--fire)"><h3>🧮 Calculadora</h3><p>Calculá un FWI a mano,
+        cargando vos mismo la temperatura, humedad, viento y lluvia.
+        <br><a href="/calculadora.html">Abrir la calculadora →</a></p></div>
+      <div class="card"><h3>🔌 API de índices</h3><p>Calculá cualquier índice a partir del clima:
+        <br><code>POST /indices/FFMC</code>
+        <br><code>POST /indices/FWI/calc</code></p></div>
+    </div>
+  </main>
+  <footer>
+    Proyecto independiente · No es información oficial ·
+    Contrastar con fuentes oficiales antes de decidir.
+  </footer>
+
+  <a class="credit" href="https://github.com/matiasoviedo28" target="_blank" rel="noopener">code by: Matías Oviedo</a>
+
+  <div class="gh-fab">
+    <a href="https://github.com/matiasoviedo28/FWI" target="_blank" rel="noopener" aria-label="GitHub">
+      <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="currentColor" fill="none" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+      <span class="tip">GitHub</span>
+    </a>
+  </div>
+</body>
+</html>

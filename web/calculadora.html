@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FWI Argentina — Calculadora manual</title>
+  <link rel="icon" href="/images/fire.ico" type="image/x-icon" />
+  <style>
+    :root{
+      --fire:#e8312a; --ember:#f4593f; --ink:#1c1a19; --bg:#f7f4f2;
+      --surface:#ffffff; --muted:#6b625e; --line:#e7e0dc; --ok:#1c5a1c;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+
+    header{display:flex;align-items:center;gap:12px;padding:0 18px;height:56px;background:var(--ink);color:#fff}
+    header img{height:30px}
+    header .brand{font-weight:800;letter-spacing:.3px}
+    header .brand small{font-weight:400;opacity:.7;margin-left:6px}
+    header a.back{margin-left:auto;color:#fff;text-decoration:none;font-size:14px;opacity:.85}
+    header a.back:hover{opacity:1}
+
+    .wrap{max-width:880px;margin:0 auto;padding:28px 18px 90px}
+    h1{font-size:clamp(22px,4vw,30px);margin:0 0 6px}
+    .lead{color:var(--muted);margin:0 0 24px;line-height:1.6}
+
+    .grid{display:grid;gap:20px;grid-template-columns:1fr 1fr}
+    @media(max-width:720px){.grid{grid-template-columns:1fr}}
+
+    .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+    .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 14px}
+
+    .field{margin-bottom:16px}
+    .field label{display:block;font-weight:600;font-size:14px;margin-bottom:3px}
+    .field .help{font-size:12.5px;color:var(--muted);margin:0 0 7px;line-height:1.45}
+    .field .inrow{display:flex;align-items:center;gap:8px}
+    .field input{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:9px;width:100%;transition:.15s}
+    .field input:focus{outline:none;border-color:var(--ember);box-shadow:0 0 0 3px rgba(244,89,63,.12)}
+    .field input.bad{border-color:var(--fire);background:#fff6f5}
+    .field .unit{font-size:13px;color:var(--muted);white-space:nowrap}
+    .field .err{display:none;color:var(--fire);font-size:12.5px;margin-top:5px;font-weight:600}
+    .field.invalid .err{display:block}
+
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+    .adv-toggle{background:none;border:none;color:var(--fire);font:inherit;font-weight:600;cursor:pointer;padding:0;margin-top:4px}
+    .adv-toggle:hover{text-decoration:underline}
+    .adv{display:none;margin-top:16px;padding-top:16px;border-top:1px dashed var(--line)}
+    .adv.open{display:block}
+
+    .actions{display:flex;gap:10px;align-items:center;margin-top:4px}
+    button.primary{font:inherit;border:1px solid var(--fire);background:var(--fire);color:#fff;font-weight:700;
+      border-radius:10px;padding:11px 22px;cursor:pointer;transition:.15s}
+    button.primary:hover{background:var(--ember);border-color:var(--ember)}
+    button.ghost{font:inherit;border:1px solid var(--line);background:#fafafa;border-radius:10px;padding:11px 16px;cursor:pointer}
+    button.ghost:hover{border-color:var(--ember)}
+
+    /* resultado */
+    .result{display:none}
+    .result.show{display:block}
+    .fwi-big{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .fwi-num{font-size:46px;font-weight:800;line-height:1}
+    .fwi-level{font-size:14px;font-weight:700;padding:5px 12px;border-radius:20px;color:#fff}
+    .fwi-cap{font-size:12.5px;color:var(--muted);margin-top:4px}
+    .comps{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .comp{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+    .comp .k{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.4px}
+    .comp .v{font-size:20px;font-weight:700}
+    .comp .d{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.35}
+    .placeholder{color:var(--muted);font-size:14px;line-height:1.6}
+    .calc-err{display:none;color:var(--fire);font-weight:600;font-size:14px;margin-top:12px}
+    .calc-err.show{display:block}
+
+    .note{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:18px;
+      background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+
+    /* crédito centrado abajo, difuso */
+    .credit{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:1200;
+      font-size:12px;color:#000;text-decoration:none;opacity:.4;filter:blur(.3px);
+      background:rgba(255,255,255,.45);backdrop-filter:blur(2px);padding:3px 12px;border-radius:12px;
+      transition:.25s}
+    .credit:hover{opacity:.9;filter:none}
+
+    /* botón GitHub flotante */
+    .gh-fab{position:fixed;right:18px;bottom:18px;z-index:1200}
+    .gh-fab a{display:block;color:var(--ink)}
+    .gh-fab svg{width:34px;height:34px;transition:.2s}
+    .gh-fab a:hover svg{transform:scale(1.25);color:var(--fire)}
+    .gh-fab .tip{position:absolute;bottom:48px;left:50%;transform:translateX(-50%) scale(0);
+      transform-origin:bottom;background:#fff;border:1px solid var(--line);border-radius:8px;
+      padding:5px 11px;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15);
+      transition:.25s ease-in-out;white-space:nowrap}
+    .gh-fab a:hover .tip{transform:translateX(-50%) scale(1)}
+  </style>
+</head>
+<body>
+  <header>
+    <img src="/images/fire.png" alt="FWI" onerror="this.src='images/fire.png'">
+    <div class="brand">FWI Argentina <small>Calculadora manual</small></div>
+    <a class="back" href="/">← volver</a>
+  </header>
+
+  <main class="wrap">
+    <h1>🧮 Calculadora de FWI</h1>
+    <p class="lead">Cargá las variables meteorológicas de un día y obtené el <strong>Fire Weather Index</strong>
+      y sus seis componentes, calculados con el sistema canadiense <strong>CFFWIS</strong> (las mismas
+      fórmulas que usa el mapa). Es un cálculo educativo a partir de tus datos; no reemplaza al pronóstico oficial.</p>
+
+    <div class="grid">
+      <!-- ENTRADA -->
+      <section class="card">
+        <h2>Variables meteorológicas</h2>
+        <form id="form" novalidate>
+          <div class="field" data-min="-50" data-max="60" data-req="1">
+            <label for="temp">Temperatura</label>
+            <p class="help">Temperatura del aire al mediodía, en grados Celsius.</p>
+            <div class="inrow">
+              <input id="temp" type="number" step="0.1" inputmode="decimal" placeholder="ej. 28.5" />
+              <span class="unit">°C</span>
+            </div>
+            <div class="err"></div>
+          </div>
+
+          <div class="field" data-min="0" data-max="100" data-req="1">
+            <label for="hr">Humedad relativa</label>
+            <p class="help">Porcentaje de humedad del aire. Entre 0 y 100.</p>
+            <div class="inrow">
+              <input id="hr" type="number" step="1" inputmode="decimal" placeholder="ej. 35" />
+              <span class="unit">%</span>
+            </div>
+            <div class="err"></div>
+          </div>
+
+          <div class="field" data-min="0" data-max="300" data-req="1">
+            <label for="viento">Viento</label>
+            <p class="help">Velocidad media del viento a 10 m, en km/h. No puede ser negativo.</p>
+            <div class="inrow">
+              <input id="viento" type="number" step="0.1" inputmode="decimal" placeholder="ej. 18" />
+              <span class="unit">km/h</span>
+            </div>
+            <div class="err"></div>
+          </div>
+
+          <div class="field" data-min="0" data-max="500" data-req="1">
+            <label for="pp">Precipitación (24 h)</label>
+            <p class="help">Lluvia acumulada en las últimas 24 horas, en mm. Si no llovió, poné 0.</p>
+            <div class="inrow">
+              <input id="pp" type="number" step="0.1" inputmode="decimal" placeholder="ej. 0" />
+              <span class="unit">mm</span>
+            </div>
+            <div class="err"></div>
+          </div>
+
+          <button type="button" class="adv-toggle" id="advBtn">⚙️ Opciones avanzadas</button>
+
+          <div class="adv" id="adv">
+            <div class="two">
+              <div class="field" data-min="1" data-max="12" data-int="1" data-req="1">
+                <label for="mes">Mes</label>
+                <p class="help">1–12. Afecta DMC y DC (duración del día).</p>
+                <input id="mes" type="number" step="1" inputmode="numeric" />
+                <div class="err"></div>
+              </div>
+              <div class="field" data-min="-90" data-max="90" data-req="1">
+                <label for="lat">Latitud</label>
+                <p class="help">En Argentina es negativa (hemisferio sur).</p>
+                <input id="lat" type="number" step="0.1" inputmode="decimal" value="-34" />
+                <div class="err"></div>
+              </div>
+            </div>
+
+            <p class="help" style="margin-bottom:10px">
+              <strong>Día anterior (opcional).</strong> El FFMC, DMC y DC se acumulan día a día. Si conocés
+              los valores de ayer, cargalos para un resultado encadenado más preciso. Si los dejás vacíos,
+              se usan los valores de arranque estándar (FFMC 85, DMC 6, DC 15).
+            </p>
+            <div class="two">
+              <div class="field opt" data-min="0" data-max="101">
+                <label for="ffmcPrev">FFMC de ayer</label>
+                <input id="ffmcPrev" type="number" step="0.1" inputmode="decimal" placeholder="opcional" />
+                <div class="err"></div>
+              </div>
+              <div class="field opt" data-min="0" data-max="1000">
+                <label for="dmcPrev">DMC de ayer</label>
+                <input id="dmcPrev" type="number" step="0.1" inputmode="decimal" placeholder="opcional" />
+                <div class="err"></div>
+              </div>
+              <div class="field opt" data-min="0" data-max="2000">
+                <label for="dcPrev">DC de ayer</label>
+                <input id="dcPrev" type="number" step="0.1" inputmode="decimal" placeholder="opcional" />
+                <div class="err"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions" style="margin-top:18px">
+            <button type="submit" class="primary" id="calcBtn">Calcular FWI</button>
+            <button type="reset" class="ghost" id="resetBtn">Limpiar</button>
+          </div>
+          <div class="calc-err" id="calcErr"></div>
+        </form>
+      </section>
+
+      <!-- RESULTADO -->
+      <section class="card">
+        <h2>Resultado</h2>
+        <div class="placeholder" id="placeholder">
+          Completá las variables de la izquierda y tocá <strong>Calcular FWI</strong>.
+          Vas a ver acá el índice final y el desglose de los seis componentes del CFFWIS.
+        </div>
+
+        <div class="result" id="result">
+          <div class="fwi-big">
+            <div>
+              <div class="fwi-num" id="fwiNum">–</div>
+              <div class="fwi-cap">Fire Weather Index</div>
+            </div>
+            <div>
+              <span class="fwi-level" id="fwiLevel" style="background:var(--muted)">—</span>
+            </div>
+          </div>
+          <div class="comps">
+            <div class="comp"><div class="k">FFMC</div><div class="v" id="vFFMC">–</div><div class="d">Hojarasca fina · ignición</div></div>
+            <div class="comp"><div class="k">DMC</div><div class="v" id="vDMC">–</div><div class="d">Capa media · días/semanas</div></div>
+            <div class="comp"><div class="k">DC</div><div class="v" id="vDC">–</div><div class="d">Capa profunda · sequía</div></div>
+            <div class="comp"><div class="k">ISI</div><div class="v" id="vISI">–</div><div class="d">Propagación inicial</div></div>
+            <div class="comp"><div class="k">BUI</div><div class="v" id="vBUI">–</div><div class="d">Combustible disponible</div></div>
+            <div class="comp" style="border-color:var(--fire)"><div class="k" style="color:var(--fire)">FWI</div><div class="v" id="vFWI">–</div><div class="d">Índice final de peligro</div></div>
+          </div>
+        </div>
+
+        <div class="note">
+          El nivel de peligro (bajo, moderado, alto…) usa los mismos cortes de FWI configurados en el mapa.
+          Como es un cálculo de un solo día sin histórico real, tomalo como orientativo.
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <a class="credit" href="https://github.com/matiasoviedo28" target="_blank" rel="noopener">code by: Matías Oviedo</a>
+
+  <div class="gh-fab">
+    <a href="https://github.com/matiasoviedo28/FWI" target="_blank" rel="noopener" aria-label="GitHub">
+      <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="currentColor" fill="none" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+      <span class="tip">GitHub</span>
+    </a>
+  </div>
+
+  <script>
+    const API = window.FWI_API || "";
+
+    // mes por defecto = mes actual
+    document.getElementById("mes").value = new Date().getMonth() + 1;
+
+    const $ = id => document.getElementById(id);
+    const num = id => { const v = $(id).value.trim(); return v === "" ? null : Number(v); };
+
+    // --- validación de un campo individual ---
+    function validarCampo(field) {
+      const input = field.querySelector("input");
+      const err = field.querySelector(".err");
+      const raw = input.value.trim();
+      const req = field.dataset.req === "1";
+      const opt = field.classList.contains("opt");
+
+      const fail = msg => { field.classList.add("invalid"); input.classList.add("bad"); err.textContent = msg; return false; };
+      const ok = () => { field.classList.remove("invalid"); input.classList.remove("bad"); err.textContent = ""; return true; };
+
+      if (raw === "") {
+        if (req) return fail("Completá este valor.");
+        return ok(); // opcionales vacíos pasan
+      }
+      const v = Number(raw);
+      if (!Number.isFinite(v)) return fail("Tiene que ser un número.");
+
+      const min = field.dataset.min !== undefined ? Number(field.dataset.min) : -Infinity;
+      const max = field.dataset.max !== undefined ? Number(field.dataset.max) : Infinity;
+      if (v < min || v > max) return fail(`Debe estar entre ${min} y ${max}.`);
+      if (field.dataset.int === "1" && !Number.isInteger(v)) return fail("Debe ser un número entero.");
+      return ok();
+    }
+
+    // valida solo los campos visibles (los avanzados ocultos no bloquean)
+    function camposActivos() {
+      return [...document.querySelectorAll(".field")].filter(f => f.offsetParent !== null);
+    }
+    function validarTodo() {
+      let okAll = true;
+      camposActivos().forEach(f => { if (!validarCampo(f)) okAll = false; });
+      return okAll;
+    }
+
+    // re-valida al escribir (solo si ya estaba marcado, para no molestar de entrada)
+    document.querySelectorAll(".field input").forEach(inp => {
+      inp.addEventListener("input", () => {
+        const f = inp.closest(".field");
+        if (f.classList.contains("invalid")) validarCampo(f);
+      });
+    });
+
+    // opciones avanzadas
+    $("advBtn").onclick = () => {
+      const a = $("adv");
+      a.classList.toggle("open");
+      $("advBtn").textContent = a.classList.contains("open") ? "⚙️ Ocultar opciones avanzadas" : "⚙️ Opciones avanzadas";
+    };
+
+    // escala de riesgo (para el nivel y color del FWI), traída del mismo backend que el mapa
+    let escala = null;
+    fetch(`${API}/fwi/escala`).then(r => r.ok ? r.json() : null).then(e => { escala = e; }).catch(() => {});
+
+    function nivelDeFWI(fwi) {
+      if (!escala || !escala.cortes) return null;
+      const { cortes, colores, niveles } = escala;
+      let k = cortes.length; // por defecto, clase más alta
+      for (let i = 0; i < cortes.length; i++) { if (fwi < cortes[i]) { k = i; break; } }
+      return { nivel: niveles[k], color: colores[k] };
+    }
+
+    const fmt = x => Number(x).toFixed(1);
+
+    async function post(path, body) {
+      const r = await fetch(`${API}${path}`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        let d = "";
+        try { d = (await r.json()).detail || ""; } catch (_) {}
+        throw new Error(d || `Error ${r.status} en ${path}`);
+      }
+      return r.json();
+    }
+
+    $("form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const calcErr = $("calcErr");
+      calcErr.classList.remove("show"); calcErr.textContent = "";
+
+      if (!validarTodo()) {
+        calcErr.textContent = "Revisá los campos marcados en rojo.";
+        calcErr.classList.add("show");
+        return;
+      }
+
+      const datos = {
+        temperatura_celsius: num("temp"),
+        humedad_relativa: num("hr"),
+        velocidad_viento_kmh: num("viento"),
+        precipitacion_mm: num("pp"),
+      };
+      const mes = num("mes"), lat = num("lat"), viento = datos.velocidad_viento_kmh;
+      const prev = { FFMC: num("ffmcPrev"), DMC: num("dmcPrev"), DC: num("dcPrev") };
+
+      const btn = $("calcBtn");
+      btn.disabled = true; btn.textContent = "Calculando…";
+      try {
+        // 1) índices de humedad del combustible (modo complejo si hay valor de ayer)
+        const meteoBody = ind => ({
+          modo: prev[ind] != null ? "complejo" : "simple",
+          datos, mes, lat,
+          valor_dia_anterior: prev[ind] != null ? prev[ind] : null,
+        });
+        const [ffmc, dmc, dc] = await Promise.all([
+          post("/indices/FFMC", meteoBody("FFMC")),
+          post("/indices/DMC", meteoBody("DMC")),
+          post("/indices/DC", meteoBody("DC")),
+        ]);
+
+        // 2) índices derivados
+        const [isi, bui, fwi] = await Promise.all([
+          post("/indices/ISI/calc", { ffmc: ffmc.valor, velocidad_viento_kmh: viento }),
+          post("/indices/BUI/calc", { dmc: dmc.valor, dc: dc.valor }),
+          post("/indices/FWI/calc", { ffmc: ffmc.valor, dmc: dmc.valor, dc: dc.valor, velocidad_viento_kmh: viento }),
+        ]);
+
+        $("vFFMC").textContent = fmt(ffmc.valor);
+        $("vDMC").textContent = fmt(dmc.valor);
+        $("vDC").textContent = fmt(dc.valor);
+        $("vISI").textContent = fmt(isi.valor);
+        $("vBUI").textContent = fmt(bui.valor);
+        $("vFWI").textContent = fmt(fwi.valor);
+        $("fwiNum").textContent = fmt(fwi.valor);
+
+        const lv = nivelDeFWI(fwi.valor);
+        const lvEl = $("fwiLevel");
+        if (lv) { lvEl.textContent = lv.nivel; lvEl.style.background = lv.color; }
+        else { lvEl.textContent = "—"; lvEl.style.background = "var(--muted)"; }
+
+        $("placeholder").style.display = "none";
+        $("result").classList.add("show");
+      } catch (e) {
+        calcErr.textContent = "No se pudo calcular: " + e.message;
+        calcErr.classList.add("show");
+      } finally {
+        btn.disabled = false; btn.textContent = "Calcular FWI";
+      }
+    });
+
+    $("form").addEventListener("reset", () => {
+      document.querySelectorAll(".field").forEach(f => { f.classList.remove("invalid"); const i = f.querySelector("input"); if (i) i.classList.remove("bad"); });
+      $("calcErr").classList.remove("show");
+      $("result").classList.remove("show");
+      $("placeholder").style.display = "";
+      setTimeout(() => { $("mes").value = new Date().getMonth() + 1; $("lat").value = "-34"; }, 0);
+    });
+  </script>
+</body>
+</html>

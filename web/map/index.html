@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FWI Argentina — Mapa de peligro</title>
+  <link rel="icon" href="/images/fire.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <style>
+    :root{
+      --fire:#e8312a; --ember:#f4593f; --ink:#1c1a19; --bg:#f7f4f2;
+      --surface:#ffffff; --muted:#6b625e; --line:#e7e0dc;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+    body{display:grid;grid-template-rows:56px 1fr;height:100vh;background:var(--bg)}
+
+    header{display:flex;align-items:center;gap:12px;padding:0 18px;background:var(--ink);color:#fff}
+    header img{height:30px}
+    header .brand{font-weight:800;letter-spacing:.3px}
+    header .brand small{font-weight:400;opacity:.7;margin-left:6px}
+    header .cov{margin-left:auto;font-size:13px;opacity:.85}
+    header a.inicio{margin-left:18px;color:#fff;text-decoration:none;font-size:13px;font-weight:600;
+      border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 12px;transition:.15s;white-space:nowrap}
+    header a.inicio:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.6)}
+
+    .main{display:grid;grid-template-columns:320px 1fr;min-height:0}
+    .sidebar{background:var(--surface);border-right:1px solid var(--line);overflow:auto;padding:16px}
+    #map{height:100%;width:100%}
+
+    .sec{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+    .sec:last-child{border:none}
+    .sec h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+    .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    input{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:8px;width:100%}
+    button{font:inherit;border:1px solid var(--line);background:#fafafa;border-radius:8px;padding:7px 11px;cursor:pointer;transition:.15s}
+    button:hover{border-color:var(--ember)}
+    button.primary{background:var(--fire);border-color:var(--fire);color:#fff;font-weight:600}
+    button.primary:hover{background:var(--ember);border-color:var(--ember)}
+    button.seg{flex:1}
+    button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+    button:disabled{opacity:.45;cursor:default}
+    label.chk{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+    label.chk input{width:auto}
+
+    .badge{font-size:12px;padding:2px 9px;border-radius:11px;font-weight:600}
+    .badge.obs{background:#e3f0e3;color:#1c5a1c}
+    .badge.fct{background:#fde7cf;color:#8a4b00}
+
+    .legend .it{display:flex;align-items:center;gap:9px;font-size:14px;margin:5px 0}
+    .legend .sw{width:16px;height:16px;border-radius:4px;border:1px solid rgba(0,0,0,.15)}
+
+    .hint{font-size:13px;color:var(--muted);margin:6px 0}
+    .bar{height:8px;background:#eee;border-radius:6px;overflow:hidden;margin:8px 0 4px}
+    .bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--fire),var(--ember));transition:width .4s}
+    .prog{font-size:13px;color:var(--ink)}
+    .leaflet-control-zoom{margin-top:12px!important;margin-right:12px!important}
+
+    /* crédito centrado abajo, difuso */
+    .credit{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:1200;
+      font-size:12px;color:#000;text-decoration:none;opacity:.4;filter:blur(.3px);
+      background:rgba(255,255,255,.45);backdrop-filter:blur(2px);padding:3px 12px;border-radius:12px;
+      transition:.25s}
+    .credit:hover{opacity:.9;filter:none}
+
+    /* botón GitHub flotante (abajo a la derecha, sobre el mapa) */
+    .gh-fab{position:fixed;right:18px;bottom:18px;z-index:1200}
+    .gh-fab a{display:block;color:var(--ink)}
+    .gh-fab svg{width:34px;height:34px;transition:.2s}
+    .gh-fab a:hover svg{transform:scale(1.25);color:var(--fire)}
+    .gh-fab .tip{position:absolute;bottom:48px;left:50%;transform:translateX(-50%) scale(0);
+      transform-origin:bottom;background:#fff;border:1px solid var(--line);border-radius:8px;
+      padding:5px 11px;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15);
+      transition:.25s ease-in-out;white-space:nowrap}
+    .gh-fab a:hover .tip{transform:translateX(-50%) scale(1)}
+  </style>
+</head>
+<body>
+  <header>
+    <img src="/images/fire.png" alt="FWI" onerror="this.src='../images/fire.png'">
+    <div class="brand">FWI Argentina <small>Índice de peligro de incendios · v3.0.1</small></div>
+    <div class="cov" id="cov">cargando…</div>
+    <a class="inicio" href="/">🏠 Inicio</a>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar">
+      <div class="sec">
+        <h3>Fecha</h3>
+        <div class="row">
+          <input id="viewDate" placeholder="elegí un día" />
+        </div>
+        <div class="row">
+          <button id="hoy">hoy</button>
+          <span id="tipo" class="badge obs">observado</span>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>Visualización</h3>
+        <div class="row">
+          <button id="bSimple" class="seg on">simple</button>
+          <button id="bDet" class="seg">detallado</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="chkLim" checked> Límites provinciales</label>
+      </div>
+
+      <div class="sec legend">
+        <h3>Peligro FWI <button id="cfgBtn" style="float:right;padding:2px 8px;font-size:11px">configurar</button></h3>
+        <div id="legendItems"></div>
+        <div id="escForm" style="display:none;margin-top:10px">
+          <div class="hint">Cortes de FWI (estrictamente crecientes, 0–200):</div>
+          <div class="row"><span style="width:74px">bajo→mod</span><input id="c0" type="number" step="0.01"></div>
+          <div class="row"><span style="width:74px">mod→alto</span><input id="c1" type="number" step="0.01"></div>
+          <div class="row"><span style="width:74px">alto→m.alto</span><input id="c2" type="number" step="0.01"></div>
+          <div class="row"><span style="width:74px">m.alto→ext</span><input id="c3" type="number" step="0.01"></div>
+          <div class="hint" id="escErr" style="color:var(--fire)"></div>
+          <div class="row">
+            <button id="escSave" class="primary">Guardar</button>
+            <button id="escReset">Resetear</button>
+            <button id="escCancel">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>Descargar datos</h3>
+        <div class="hint" id="covTxt">—</div>
+        <div class="row"><input id="dlRange" placeholder="rango a descargar (de–a, o un día)" /></div>
+        <div class="row">
+          <button id="bPlan">Planificar</button>
+          <button id="bGo" class="primary" disabled>Descargar</button>
+        </div>
+        <div class="hint" id="planTxt"></div>
+        <div id="progBox" style="display:none">
+          <div class="bar"><div id="progBar"></div></div>
+          <div class="prog" id="progTxt"></div>
+        </div>
+      </div>
+    </aside>
+
+    <div id="map"></div>
+  </div>
+
+  <a class="credit" href="https://github.com/matiasoviedo28" target="_blank" rel="noopener">code by: Matías Oviedo</a>
+
+  <div class="gh-fab">
+    <a href="https://github.com/matiasoviedo28/FWI" target="_blank" rel="noopener" aria-label="GitHub">
+      <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="currentColor" fill="none" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+      <span class="tip">GitHub</span>
+    </a>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+  <script>
+    const API = window.FWI_API || "";
+    const map = L.map("map", { zoomControl: true }).setView([-38, -64], 4);
+    map.zoomControl.setPosition("topright");
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      { attribution: "© OpenStreetMap, © CARTO", maxZoom: 12 }).addTo(map);
+    setTimeout(() => map.invalidateSize(), 200);
+
+    let capa = null, limites = null, modo = "simple", fecha = null, kind = "observed";
+    let obsSet = new Set(), fctSet = new Set(), fpView = null, fpRange = null, planRango = null;
+    let ver = 0;   // cache-busting: cambia cuando se regeneran las bandas (descarga o nueva escala)
+
+    const ymd = dt => dt.toLocaleDateString("sv");                       // YYYY-MM-DD (interno/API)
+    const fmtDMY = iso => { if (!iso) return iso; const [y, m, d] = iso.split("-"); return `${d}-${m}-${y}`; };
+    const dmyAll = s => (s || "").replace(/(\d{4})-(\d{2})-(\d{2})/g, "$3-$2-$1");   // en textos libres
+    const estilo = f => ({ color: f.properties.color, weight: 0, fillColor: f.properties.color, fillOpacity: .55 });
+    const tipoDe = d => fctSet.has(d) ? "forecast" : "observed";
+
+    // límites provinciales: línea negra por encima de las bandas
+    fetch(`${API}/fwi/limites.geojson`).then(r => r.ok ? r.json() : null).then(g => {
+      if (!g) return;
+      limites = L.geoJSON(g, { style: { color: "#111", weight: 1, fill: false, opacity: .85 } });
+      if (document.getElementById("chkLim").checked) limites.addTo(map);
+    });
+
+    function pintar() {
+      if (!fecha) return;
+      kind = tipoDe(fecha);
+      const t = document.getElementById("tipo");
+      t.textContent = kind === "forecast" ? "pronóstico" : "observado";
+      t.className = "badge " + (kind === "forecast" ? "fct" : "obs");
+      fetch(`${API}/fwi/bands.geojson?fecha=${fecha}&kind=${kind}&simple=${modo === "simple"}&v=${ver}`)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(geo => {
+          if (capa) map.removeLayer(capa);
+          capa = L.geoJSON(geo, { style: estilo }).addTo(map);
+          if (limites && map.hasLayer(limites)) limites.bringToFront();
+        }).catch(() => { if (capa) { map.removeLayer(capa); capa = null; } });
+    }
+
+    map.on("click", e => {
+      if (!fecha) return;
+      fetch(`${API}/fwi/at?lat=${e.latlng.lat}&lon=${e.latlng.lng}&fecha=${fecha}&kind=${kind}&v=${ver}`)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(p => L.popup().setLatLng(e.latlng).setContent(
+          `<b>${p.provincia ?? ""}</b> ${p.tipo === "forecast" ? "(pronóstico)" : ""}<br>
+           <b>FWI:</b> ${p.fwi} (${p.nivel})<br>
+           <b>Temp:</b> ${p.temperatura} °C &nbsp; <b>HR:</b> ${p.humedad} %<br>
+           <b>Viento:</b> ${p.viento} km/h &nbsp; <b>PP 24h:</b> ${p.precipitacion} mm<br>
+           <b>Fecha:</b> ${fmtDMY(p.fecha)}`).openOn(map)).catch(() => {});
+    });
+
+    const bS = document.getElementById("bSimple"), bD = document.getElementById("bDet");
+    bS.onclick = () => { bS.classList.add("on"); bD.classList.remove("on"); modo = "simple"; pintar(); };
+    bD.onclick = () => { bD.classList.add("on"); bS.classList.remove("on"); modo = "detallado"; pintar(); };
+    document.getElementById("chkLim").onchange = e => {
+      if (!limites) return;
+      if (e.target.checked) { limites.addTo(map); limites.bringToFront(); } else map.removeLayer(limites);
+    };
+
+    function fmtETA(s) {
+      if (s == null) return "";
+      if (s < 90) return `~${s}s`;
+      return `~${Math.round(s / 60)} min`;
+    }
+
+    function cargarCobertura() {
+      return fetch(`${API}/fwi/coverage`).then(r => r.json()).then(cov => {
+        obsSet = new Set(cov.observed.dias || []);
+        fctSet = new Set(cov.forecast.dias || []);
+        const minObs = cov.observed.desde, maxFct = cov.forecast_max || cov.observed.hasta;
+        const txt = minObs ? `${fmtDMY(minObs)} → ${fmtDMY(cov.observed.hasta)}` : "sin datos";
+        document.getElementById("cov").textContent = `Datos: ${txt}` + (cov.forecast_max ? ` · pronóstico ${fmtDMY(cov.forecast_max)}` : "");
+        document.getElementById("covTxt").textContent = minObs
+          ? `Tu rango de fechas existente es: ${fmtDMY(minObs)} → ${fmtDMY(cov.observed.hasta)}. Elegí un rango nuevo para sumar más.` : "Sin datos todavía.";
+        const vopts = { locale: "es", dateFormat: "Y-m-d", altInput: true, altFormat: "d-m-Y", minDate: minObs, maxDate: maxFct,
+          onDayCreate: (_, __, ___, el) => { if (fctSet.has(ymd(el.dateObj))) el.style.background = "#fff4e0"; },
+          onChange: (_, s) => { fecha = s; pintar(); } };
+        if (!fpView) fpView = flatpickr("#viewDate", { ...vopts, defaultDate: cov.observed.hasta || maxFct });
+        else { fpView.set("minDate", minObs); fpView.set("maxDate", maxFct); fpView.redraw(); }
+        if (!fpRange) fpRange = flatpickr("#dlRange", { locale: "es", dateFormat: "Y-m-d", altInput: true, altFormat: "d-m-Y", mode: "range", maxDate: "today" });
+        if (!fecha) { fecha = cov.observed.hasta || (cov.forecast.dias || []).slice(-1)[0]; if (fecha) { fpView.setDate(fecha, false); pintar(); } }
+        return cov;
+      });
+    }
+
+    document.getElementById("hoy").onclick = () => {
+      const t = obsSet.size ? [...obsSet].sort().slice(-1)[0] : null;
+      if (t && fpView) fpView.setDate(t, true);
+    };
+
+    // --- descarga por rango: planificar -> previsualizar -> descargar ---
+    const bPlan = document.getElementById("bPlan"), bGo = document.getElementById("bGo");
+    bPlan.onclick = () => {
+      const sel = fpRange.selectedDates;
+      if (!sel.length) { document.getElementById("planTxt").textContent = "Elegí un rango (o un día) primero."; return; }
+      const desde = ymd(sel[0]), hasta = ymd(sel[sel.length - 1]);
+      fetch(`${API}/fwi/coverage/plan`, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ desde, hasta }) }).then(r => r.json()).then(p => {
+        if (!p.dias) { document.getElementById("planTxt").textContent = p.mensaje || "Nada para descargar."; bGo.disabled = true; planRango = null; return; }
+        planRango = { desde, hasta };
+        document.getElementById("planTxt").innerHTML =
+          `Se descargarán <b>${p.dias} día(s)</b> (${fmtDMY(p.desde)} → ${fmtDMY(p.hasta)}), ≈ ${p.mb_aprox} MB.`;
+        bGo.disabled = false;
+      });
+    };
+
+    bGo.onclick = () => {
+      if (!planRango) return;
+      bGo.disabled = true; bPlan.disabled = true;
+      fetch(`${API}/fwi/coverage/extend`, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(planRango) }).then(r => r.json()).then(j => {
+        if (j.job_id) seguirJob(j.job_id); else { bPlan.disabled = false; }
+      }).catch(() => { bPlan.disabled = false; });
+    };
+
+    function seguirJob(id, onDone) {
+      const box = document.getElementById("progBox"), bar = document.getElementById("progBar"), txt = document.getElementById("progTxt");
+      box.style.display = "block";
+      const tick = () => fetch(`${API}/fwi/jobs/${id}`).then(r => r.json()).then(j => {
+        const pct = j.total ? Math.round(100 * j.done / j.total) : 0;
+        bar.style.width = pct + "%";
+        if (j.status === "running" || j.status === "pending") {
+          if (j.status === "pending") {
+            txt.textContent = "En cola…";
+          } else {
+            const fase = j.fase === "procesando" ? "Procesando" : "Descargando";
+            const cur = dmyAll((j.message || "").replace("descargado", "último:"));
+            txt.textContent = `${fase} ${j.done}/${j.total}${cur ? " · " + cur : ""} · ${fmtETA(j.eta_seg)} restantes`;
+          }
+          setTimeout(tick, 2000);
+        } else {
+          txt.textContent = j.status === "done" ? "✓ Listo" : `✗ Error: ${j.message || ""}`;
+          bar.style.width = "100%";
+          document.getElementById("bPlan").disabled = false;
+          ver = Date.now();          // las bandas se regeneraron -> forzar recarga sin caché
+          cargarCobertura();
+          if (onDone) onDone();
+          setTimeout(() => { box.style.display = "none"; }, 5000);
+        }
+      }).catch(() => setTimeout(tick, 3000));
+      tick();
+    }
+
+    // --- escala de riesgo configurable ---
+    let cortes = [], coloresClase = [], nivelesArr = [], escMod = false;
+    const fmtN = x => Number(x).toFixed(2).replace(/\.?0+$/, "");
+
+    function renderLegend() {
+      const cont = document.getElementById("legendItems");
+      cont.innerHTML = "";
+      for (let k = 0; k < 5; k++) {
+        const rng = k === 4 ? `> ${fmtN(cortes[3])}`
+          : `${k === 0 ? "0" : fmtN(cortes[k - 1])} – ${fmtN(cortes[k])}`;
+        cont.insertAdjacentHTML("beforeend",
+          `<div class="it"><span class="sw" style="background:${coloresClase[k]}"></span>${nivelesArr[k]}` +
+          `<small style="color:var(--muted);margin-left:auto">${rng}</small></div>`);
+      }
+      document.getElementById("escReset").style.display = escMod ? "" : "none";
+    }
+
+    function cargarEscala() {
+      return fetch(`${API}/fwi/escala`).then(r => r.json()).then(e => {
+        cortes = e.cortes; coloresClase = e.colores; nivelesArr = e.niveles; escMod = e.modificado;
+        renderLegend();
+        [0, 1, 2, 3].forEach(i => document.getElementById("c" + i).value = cortes[i]);
+      });
+    }
+
+    const escErr = document.getElementById("escErr");
+    document.getElementById("cfgBtn").onclick = () => {
+      const f = document.getElementById("escForm");
+      f.style.display = f.style.display === "none" ? "block" : "none"; escErr.textContent = "";
+    };
+    document.getElementById("escCancel").onclick = () => { document.getElementById("escForm").style.display = "none"; };
+
+    function validar(c) {
+      if (c.some(x => isNaN(x))) return "Completá los 4 valores.";
+      if (c.some(x => x < 0 || x > 200)) return "Cada corte debe estar entre 0 y 200.";
+      for (let i = 0; i < 3; i++) if (c[i] >= c[i + 1]) return "Deben ser estrictamente crecientes.";
+      return null;
+    }
+    function trasEscala(job) {
+      cargarEscala();
+      document.getElementById("escForm").style.display = "none";
+      if (job) seguirJob(job, () => { cargarEscala(); pintar(); }); else pintar();
+    }
+    document.getElementById("escSave").onclick = () => {
+      const c = [0, 1, 2, 3].map(i => parseFloat(document.getElementById("c" + i).value));
+      const err = validar(c);
+      if (err) { escErr.textContent = err; return; }
+      fetch(`${API}/fwi/escala`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cortes: c }) })
+        .then(r => r.ok ? r.json() : r.json().then(e => Promise.reject(e)))
+        .then(res => trasEscala(res.job_id))
+        .catch(e => { escErr.textContent = e.detail || "Error al guardar."; });
+    };
+    document.getElementById("escReset").onclick = () => {
+      fetch(`${API}/fwi/escala/reset`, { method: "POST" }).then(r => r.json()).then(res => trasEscala(res.job_id));
+    };
+
+    cargarEscala();
+    cargarCobertura();
+  </script>
+</body>
+</html>
